@@ -3,41 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora ITP Catalunya 2025 - START INMO</title>
+  <title>Calculadora ITP Catalunya 2025 - Corner Real Estate</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      background: #f5f5f5;
+      background: #f5f2f0; /* Alabaster White */
+      color: #1c211f; /* Army Green */
+    }
+    .logo {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 120px;
     }
     .container {
-      background: white;
+      background: #f5f2f0;
       padding: 20px;
       max-width: 400px;
       margin: auto;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding-top: 60px;
     }
     h2 {
       margin-bottom: 5px;
     }
     .empresa {
       font-size: 0.9em;
-      color: #555;
+      color: #1c211f;
       margin-bottom: 20px;
     }
-    input[type="number"] {
+    input[type="number"], input[type="text"], input[type="email"], textarea {
       width: 100%;
       box-sizing: border-box;
       padding: 10px;
       font-size: 1em;
       border: 1px solid #ccc;
       border-radius: 5px;
+      margin-bottom: 15px;
+      background-color: #ffffff;
+      color: #1c211f;
     }
     button {
       padding: 10px;
       width: 100%;
-      background: #0077cc;
+      background: #6d827f;
       color: white;
       border: none;
       border-radius: 5px;
@@ -55,24 +66,44 @@
     .tramos-info {
       margin-top: 20px;
       font-size: 0.85em;
-      color: #333;
-      background: #eef;
+      color: #1c211f;
+      background: #dedbcf;
       padding: 10px;
       border-radius: 5px;
+    }
+    #formulario-contacto {
+      display: none;
+      margin-top: 30px;
     }
   </style>
 </head>
 <body>
+  <img src="LOGO-2-oscuro.png" alt="Logo Corner Real Estate" class="logo">
   <div class="container">
     <h2>Calculadora de ITP Catalunya 2025</h2>
-    <div class="empresa">by START INMO</div>
+    <div class="empresa">by Corner Real Estate</div>
     <label for="precio">Introduce el precio de compra (€):</label>
     <input type="number" id="precio" placeholder="Ej. 750000">
     <button onclick="calcularITP()">Calcular ITP</button>
     <div id="resultado"></div>
+
+    <div id="formulario-contacto">
+      <hr style="margin: 30px 0;">
+      <h3>Descarga tu cálculo personalizado en PDF</h3>
+      <p>Introduce tus datos para recibir el documento al instante:</p>
+      <form name="descarga" method="POST" data-netlify="true" onsubmit="return generarPDF(event)">
+        <label>Nombre:<br><input type="text" name="nombre" id="pdf-nombre" required></label><br>
+        <label>Email:<br><input type="email" name="email" id="pdf-email" required></label><br>
+        <label>Teléfono:<br><input type="text" name="telefono" id="pdf-telefono" required></label><br>
+        <button type="submit">Descargar PDF</button>
+      </form>
+    </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
+    let calculoHTML = "";
+
     function calcularITP() {
       const precio = parseFloat(document.getElementById("precio").value);
       let impuesto = 0;
@@ -98,7 +129,8 @@
           const base = Math.min(restante, tramo.limite - anteriorLimite);
           const impTramo = base * tramo.tipo;
           impuesto += impTramo;
-          detalles += `• ${base.toLocaleString('es-ES')} € al ${(tramo.tipo * 100).toFixed(0)}% = ${impTramo.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}<br>`;
+          detalles += `• ${base.toLocaleString('es-ES')} € al ${(tramo.tipo * 100).toFixed(0)}% = ${impTramo.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+`;
           restante -= base;
           anteriorLimite = tramo.limite;
         }
@@ -106,17 +138,62 @@
 
       const tipoEfectivo = (impuesto / precio * 100).toFixed(2);
 
-      document.getElementById("resultado").innerHTML =
-        `ITP a pagar: <strong>${impuesto.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</strong><br>
-         Tipo efectivo: <strong>${tipoEfectivo}%</strong><br><br>
-         <div class="detalle">Detalle por tramos:<br>${detalles}</div>
-         <div class="tramos-info">
-           <strong>Tramos informativos ITP Catalunya 2025:</strong><br>
-           • Hasta 600.000 € → 10%<br>
-           • De 600.001 € a 900.000 € → 11%<br>
-           • De 900.001 € a 1.500.000 € → 12%<br>
-           • Más de 1.500.000 € → 13%
-         </div>`;
+      calculoHTML = `Cálculo ITP Catalunya 2025
+
+` +
+        `Precio de compra: ${precio.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+` +
+        `ITP a pagar: ${impuesto.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+` +
+        `Tipo efectivo: ${tipoEfectivo}%
+
+` +
+        `Detalle por tramos:
+${detalles}` +
+        `
+Tramos informativos:
+` +
+        `• Hasta 600.000 € → 10%
+` +
+        `• De 600.001 € a 900.000 € → 11%
+` +
+        `• De 900.001 € a 1.500.000 € → 12%
+` +
+        `• Más de 1.500.000 € → 13%`;
+
+      document.getElementById("resultado").innerHTML = calculoHTML.replace(/\n/g, "<br>");
+      document.getElementById("formulario-contacto").style.display = "block";
+    }
+
+    async function generarPDF(e) {
+      e.preventDefault();
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const nombre = document.getElementById("pdf-nombre").value;
+      const email = document.getElementById("pdf-email").value;
+      const telefono = document.getElementById("pdf-telefono").value;
+
+      const contenido = `Nombre: ${nombre}
+Email: ${email}
+Teléfono: ${telefono}
+
+${calculoHTML}`;
+
+      const lineas = contenido.split("
+");
+      let y = 10;
+      lineas.forEach(linea => {
+        doc.text(linea, 10, y);
+        y += 7;
+      });
+
+      doc.save("calculo-itp-cornerrealestate.pdf");
+
+      alert("¡Tu PDF se ha descargado correctamente! También hemos recibido tus datos.");
+
+      return true;
     }
   </script>
 </body>
