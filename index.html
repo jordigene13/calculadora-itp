@@ -53,6 +53,7 @@
       border: none;
       border-radius: 5px;
       font-size: 1em;
+      cursor: pointer;
     }
     #resultado {
       margin-top: 20px;
@@ -100,7 +101,6 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     let calculoHTML = "";
 
@@ -168,7 +168,11 @@ Tramos informativos:
 
     function generarPDF(e) {
       e.preventDefault();
-      const { jsPDF } = window.jspdf;
+      const jsPDF = window.jspdf?.jsPDF;
+      if (!jsPDF) {
+        alert("No se ha podido cargar jsPDF correctamente.");
+        return false;
+      }
       const doc = new jsPDF();
 
       const nombre = document.getElementById("pdf-nombre").value;
@@ -196,5 +200,6 @@ ${calculoHTML}`;
       return true;
     }
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>
