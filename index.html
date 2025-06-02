@@ -104,100 +104,97 @@
   <script>
     let calculoHTML = "";
 
-    window.onload = function () {
-      const { jsPDF } = window.jspdf;
+    function calcularITP() {
+      const precio = parseFloat(document.getElementById("precio").value);
+      let impuesto = 0;
 
-      window.calcularITP = function () {
-        const precio = parseFloat(document.getElementById("precio").value);
-        let impuesto = 0;
+      if (isNaN(precio) || precio <= 0) {
+        document.getElementById("resultado").innerText = "Por favor, introduce un valor válido.";
+        return;
+      }
 
-        if (isNaN(precio) || precio <= 0) {
-          document.getElementById("resultado").innerText = "Por favor, introduce un valor válido.";
-          return;
-        }
+      const tramos = [
+        { limite: 600000, tipo: 0.10 },
+        { limite: 900000, tipo: 0.11 },
+        { limite: 1500000, tipo: 0.12 },
+        { limite: Infinity, tipo: 0.13 }
+      ];
 
-        const tramos = [
-          { limite: 600000, tipo: 0.10 },
-          { limite: 900000, tipo: 0.11 },
-          { limite: 1500000, tipo: 0.12 },
-          { limite: Infinity, tipo: 0.13 }
-        ];
+      let restante = precio;
+      let anteriorLimite = 0;
+      let detalles = "";
 
-        let restante = precio;
-        let anteriorLimite = 0;
-        let detalles = "";
-
-        for (let tramo of tramos) {
-          if (precio > anteriorLimite) {
-            const base = Math.min(restante, tramo.limite - anteriorLimite);
-            const impTramo = base * tramo.tipo;
-            impuesto += impTramo;
-            detalles += `• ${base.toLocaleString('es-ES')} € al ${(tramo.tipo * 100).toFixed(0)}% = ${impTramo.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+      for (let tramo of tramos) {
+        if (precio > anteriorLimite) {
+          const base = Math.min(restante, tramo.limite - anteriorLimite);
+          const impTramo = base * tramo.tipo;
+          impuesto += impTramo;
+          detalles += `• ${base.toLocaleString('es-ES')} € al ${(tramo.tipo * 100).toFixed(0)}% = ${impTramo.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
 `;
-            restante -= base;
-            anteriorLimite = tramo.limite;
-          }
+          restante -= base;
+          anteriorLimite = tramo.limite;
         }
+      }
 
-        const tipoEfectivo = (impuesto / precio * 100).toFixed(2);
+      const tipoEfectivo = (impuesto / precio * 100).toFixed(2);
 
-        calculoHTML = `Cálculo ITP Catalunya 2025
-
-` +
-          `Precio de compra: ${precio.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-` +
-          `ITP a pagar: ${impuesto.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-` +
-          `Tipo efectivo: ${tipoEfectivo}%
+      calculoHTML = `Cálculo ITP Catalunya 2025
 
 ` +
-          `Detalle por tramos:
+        `Precio de compra: ${precio.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+` +
+        `ITP a pagar: ${impuesto.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+` +
+        `Tipo efectivo: ${tipoEfectivo}%
+
+` +
+        `Detalle por tramos:
 ${detalles}` +
-          `
+        `
 Tramos informativos:
 ` +
-          `• Hasta 600.000 € → 10%
+        `• Hasta 600.000 € → 10%
 ` +
-          `• De 600.001 € a 900.000 € → 11%
+        `• De 600.001 € a 900.000 € → 11%
 ` +
-          `• De 900.001 € a 1.500.000 € → 12%
+        `• De 900.001 € a 1.500.000 € → 12%
 ` +
-          `• Más de 1.500.000 € → 13%`;
+        `• Más de 1.500.000 € → 13%`;
 
-        document.getElementById("resultado").innerHTML = calculoHTML.replace(/
+      document.getElementById("resultado").innerHTML = calculoHTML.replace(/
 /g, "<br>");
-        document.getElementById("formulario-contacto").style.display = "block";
-      };
+      document.getElementById("formulario-contacto").style.display = "block";
+    }
 
-      window.generarPDF = function (e) {
-        e.preventDefault();
+    function generarPDF(e) {
+      e.preventDefault();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
 
-        const doc = new jsPDF();
-        const nombre = document.getElementById("pdf-nombre").value;
-        const email = document.getElementById("pdf-email").value;
-        const telefono = document.getElementById("pdf-telefono").value;
+      const nombre = document.getElementById("pdf-nombre").value;
+      const email = document.getElementById("pdf-email").value;
+      const telefono = document.getElementById("pdf-telefono").value;
 
-        const contenido = `Nombre: ${nombre}
+      const contenido = `Nombre: ${nombre}
 Email: ${email}
 Teléfono: ${telefono}
 
 ${calculoHTML}`;
 
-        const lineas = contenido.split("
+      const lineas = contenido.split("
 ");
-        let y = 10;
-        lineas.forEach(linea => {
-          doc.text(linea, 10, y);
-          y += 7;
-        });
+      let y = 10;
+      lineas.forEach(linea => {
+        doc.text(linea, 10, y);
+        y += 7;
+      });
 
-        doc.save("calculo-itp-cornerrealestate.pdf");
+      doc.save("calculo-itp-cornerrealestate.pdf");
 
-        alert("¡Tu PDF se ha descargado correctamente! También hemos recibido tus datos.");
+      alert("¡Tu PDF se ha descargado correctamente! También hemos recibido tus datos.");
 
-        return true;
-      };
-    };
+      return true;
+    }
   </script>
 </body>
 </html>
